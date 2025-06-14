@@ -90,3 +90,4 @@ function generatePrompt(userPrompt: string, mode: string) {
       return userPrompt;
   }
 }
+//         </button>
