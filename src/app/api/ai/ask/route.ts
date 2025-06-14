@@ -19,16 +19,11 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
 
     // Формуємо текст для prompt
-    if (data && data.top_users && data.top_users.length > 0) {
+    if (data && data.top_users) {
       statsText = 'Ось активність за тиждень:\n' +
         data.top_users
-          .map(
-            (u: { username: string; message_count: number }, i: number) =>
-              `${i + 1}. ${u.username}: ${u.message_count} повідомлень`
-          )
+          .map((u: any, i: number) => `${i + 1}. ${u.username}: ${u.message_count} повідомлень`)
           .join('\n');
-    } else {
-      statsText = 'Дані про активність за цей період відсутні.';
     }
   }
 

@@ -24,7 +24,7 @@ export default function Demo({ title = APP_NAME }: { title?: string }) {
 
       const data = await res.json();
       setResponse(data.result);
-    } catch (_err) {
+    } catch (err) {
       setResponse("⚠️ Помилка при запиті до AI.");
     } finally {
       setLoading(false);
