@@ -68,3 +68,4 @@ function generatePrompt(userPrompt: string, mode: string) {
     default:
       return userPrompt;
   }
+}
