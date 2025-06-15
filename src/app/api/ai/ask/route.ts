@@ -3,33 +3,39 @@ import { NextRequest, NextResponse } from 'next/server';
 const NEYNAR_API_KEY = process.env.NEYNAR_API_KEY;
 
 export async function POST(req: NextRequest) {
-  interface AskRequestBody {
-    prompt: string;
-    mode: string;
-  }
+  const { prompt, mode } = await req.json();
 
-  const { prompt, mode } = await req.json() as AskRequestBody;
-
-
-  // Якщо питання про активність, підтягуємо статистику з Neynar
   let statsText = '';
-  if (/найактивніший|активність/i.test(prompt)) {
-    // Замість CHANNEL_ID підставте ваш id каналу
-    const channelId = 'farcaster';
+  if (/найактивніший|активність|most active/i.test(prompt)) {
+    const channelId = 'founders';
     const res = await fetch(
-      `https://api.neynar.com/v2/farcaster/channel/${channelId}/activity?timeframe=7d`,
+      `https://api.neynar.com/v2/farcaster/feed/channels/?channel_ids=${channelId}&limit=100`,
       {
-        headers: { 'api_key': NEYNAR_API_KEY! },
+        headers: { 'x-api-key': NEYNAR_API_KEY! },
       }
     );
     const data = await res.json();
 
-    // Формуємо текст для prompt
-    if (data && data.top_users) {
+    // Підрахунок активності
+    const userStats: Record<string, { username: string; count: number }> = {};
+    for (const cast of data.casts) {
+      const username = cast.author.username;
+      if (!userStats[username]) {
+        userStats[username] = { username, count: 0 };
+      }
+      userStats[username].count += 1;
+    }
+
+    // Топ-3 користувачі
+    const topUsers = Object.values(userStats)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+
+    if (topUsers.length > 0) {
       statsText = 'Ось активність за тиждень:\n' +
-        data.top_users
-          .map((u: any, i: number) => `${i + 1}. ${u.username}: ${u.message_count} повідомлень`)
-          .join('\n');
+        topUsers.map((u, i) => `${i + 1}. ${u.username}: ${u.count} повідомлень`).join('\n');
+    } else {
+      statsText = 'Дані про активність за цей період відсутні.';
     }
   }
 
