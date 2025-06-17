@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     );
     const data = await res.json();
 
-    // Підрахунок активності
+    // Підрахунок активності тест
     const userStats: Record<string, { username: string; count: number }> = {};
     for (const cast of data.casts) {
       const username = cast.author.username;
