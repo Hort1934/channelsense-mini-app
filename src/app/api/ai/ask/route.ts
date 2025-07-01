@@ -119,3 +119,5 @@ function generatePrompt(userPrompt: string, mode: string) {
       return `Підсумуй ключові події чи теми. Запит: ${userPrompt}`;
     default:
       return userPrompt;
+  }
+}
