@@ -63,17 +63,19 @@ export async function POST(req: NextRequest) {
           }
         }
 
+
         // 4. Пошук кастів про співзасновників
         if (/need cofounders|потрібні співзасновники/i.test(prompt)) {
-        const cofounderCasts = feedData.casts.filter(
-          (cast: { author: { username: string }; text: string }) =>
-            /cofounder|співзасновник|looking for|шукаю/i.test(cast.text)
-        );
-        statsText = `Знайдено ${cofounderCasts.length} повідомлень про пошук співзасновників в /${channelName}:\n` +
-          cofounderCasts.slice(0, 5).map(
+          const cofounderCasts = feedData.casts.filter(
             (cast: { author: { username: string }; text: string }) =>
-              `- ${cast.author.username}: ${cast.text.substring(0, 100)}...`
-          ).join('\n');
+              /cofounder|співзасновник|looking for|шукаю/i.test(cast.text)
+          );
+          statsText = `Знайдено ${cofounderCasts.length} повідомлень про пошук співзасновників в /${channelName}:\n` +
+            cofounderCasts.slice(0, 5).map(
+              (cast: { author: { username: string }; text: string }) =>
+                `- ${cast.author.username}: ${cast.text.substring(0, 100)}...`
+            ).join('\n');
+        }
       } else {
         statsText = `Не вдалося отримати касти для каналу /${channelName}`;
       }
