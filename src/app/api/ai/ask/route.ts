@@ -6,37 +6,83 @@ export async function POST(req: NextRequest) {
   const { prompt, mode } = await req.json();
 
   let statsText = '';
-  if (/найактивніший|активність|most active/i.test(prompt)) {
-    const channelId = 'founders';
-    const res = await fetch(
-      `https://api.neynar.com/v2/farcaster/feed/channels/?channel_ids=${channelId}&limit=100`,
+  let channelData = null;
+
+  // Гнучке розпізнавання каналу з промпта
+  let channelName = 'founders'; // default
+  const slashMatch = prompt.match(/\/(\w+)/);
+  const wordMatch = prompt.match(/(?:канал[і]?|channel)\s+([a-zA-Z0-9_]+)/i);
+
+  if (slashMatch) {
+    channelName = slashMatch[1];
+  } else if (wordMatch) {
+    channelName = wordMatch[1];
+  }
+
+  try {
+    // 1. Отримання інформації про канал
+    const channelResponse = await fetch(
+      `https://api.neynar.com/v2/farcaster/channel/?id=${channelName}`,
       {
         headers: { 'x-api-key': NEYNAR_API_KEY! },
       }
     );
-    const data = await res.json();
 
-    // Підрахунок активності тест
-    const userStats: Record<string, { username: string; count: number }> = {};
-    for (const cast of data.casts) {
-      const username = cast.author.username;
-      if (!userStats[username]) {
-        userStats[username] = { username, count: 0 };
+    if (channelResponse.ok) {
+      channelData = await channelResponse.json();
+
+      // 2. Отримання кастів каналу
+      const feedResponse = await fetch(
+        `https://api.neynar.com/v2/farcaster/feed/channels/?channel_ids=${channelName}&limit=100`,
+        {
+          headers: { 'x-api-key': NEYNAR_API_KEY! },
+        }
+      );
+
+      if (feedResponse.ok) {
+        const feedData = await feedResponse.json();
+
+        // 3. Аналіз активності
+        if (/найактивніший|активність|most active/i.test(prompt)) {
+          const userStats: Record<string, { username: string; count: number }> = {};
+          for (const cast of feedData.casts) {
+            const username = cast.author.username;
+            if (!userStats[username]) {
+              userStats[username] = { username, count: 0 };
+            }
+            userStats[username].count += 1;
+          }
+          const topUsers = Object.values(userStats)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+
+          if (topUsers.length > 0) {
+            statsText = `Активність в каналі /${channelName}:\n` +
+              topUsers.map((u, i) => `${i + 1}. ${u.username}: ${u.count} повідомлень`).join('\n');
+          } else {
+            statsText = `Дані про активність у /${channelName} відсутні.`;
+          }
+        }
+
+        // 4. Пошук кастів про співзасновників
+        if (/need cofounders|потрібні співзасновники/i.test(prompt)) {
+          const cofounderCasts = feedData.casts.filter(cast =>
+            /cofounder|співзасновник|looking for|шукаю/i.test(cast.text)
+          );
+          statsText = `Знайдено ${cofounderCasts.length} повідомлень про пошук співзасновників в /${channelName}:\n` +
+            cofounderCasts.slice(0, 5).map(cast =>
+              `- ${cast.author.username}: ${cast.text.substring(0, 100)}...`
+            ).join('\n');
+        }
+      } else {
+        statsText = `Не вдалося отримати касти для каналу /${channelName}`;
       }
-      userStats[username].count += 1;
-    }
-
-    // Топ-3 користувачі
-    const topUsers = Object.values(userStats)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-    if (topUsers.length > 0) {
-      statsText = 'Ось активність за тиждень:\n' +
-        topUsers.map((u, i) => `${i + 1}. ${u.username}: ${u.count} повідомлень`).join('\n');
     } else {
-      statsText = 'Дані про активність за цей період відсутні.';
+      statsText = `Канал /${channelName} не знайдено.`;
     }
+  } catch (error) {
+    console.error('Error fetching channel data:', error);
+    statsText = `Помилка при отриманні даних каналу /${channelName}`;
   }
 
   const messages = [
