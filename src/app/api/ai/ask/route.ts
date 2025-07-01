@@ -6,7 +6,6 @@ export async function POST(req: NextRequest) {
   const { prompt, mode } = await req.json();
 
   let statsText = '';
-  let channelData = null;
 
   // Гнучке розпізнавання каналу з промпта
   let channelName = 'founders'; // default
@@ -29,7 +28,7 @@ export async function POST(req: NextRequest) {
     );
 
     if (channelResponse.ok) {
-      channelData = await channelResponse.json();
+      await channelResponse.json(); // не використовуємо channelData
 
       // 2. Отримання кастів каналу
       const feedResponse = await fetch(
@@ -120,5 +119,3 @@ function generatePrompt(userPrompt: string, mode: string) {
       return `Підсумуй ключові події чи теми. Запит: ${userPrompt}`;
     default:
       return userPrompt;
-  }
-}
