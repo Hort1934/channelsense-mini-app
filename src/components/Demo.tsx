@@ -1,4 +1,3 @@
-// ...existing code...
 import { useState } from "react";
 import { APP_NAME } from "~/lib/constants";
 
@@ -44,7 +43,7 @@ export default function Demo({ title = APP_NAME }: { title?: string }) {
       <textarea
         className="w-full border p-2 rounded mb-4"
         rows={3}
-        placeholder="Введіть запит (наприклад: хто найактивніший цього тижня?)"
+        placeholder="Enter your query (for example: Who is the most active this week?)"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -54,26 +53,26 @@ export default function Demo({ title = APP_NAME }: { title?: string }) {
           onClick={() => { setMode("analytics"); askAI("analytics"); }}
           className={`px-4 py-2 rounded ${mode === "analytics" ? "bg-indigo-700 text-white" : "bg-indigo-600 text-white"}`}
         >
-          Аналітика
+          Analytics
         </button>
         <button
           onClick={() => { setMode("admin"); askAI("admin"); }}
           className={`px-4 py-2 rounded ${mode === "admin" ? "bg-green-700 text-white" : "bg-green-600 text-white"}`}
         >
-          Управління
+          Management
         </button>
         <button
           onClick={() => { setMode("summary"); askAI("summary"); }}
           className={`px-4 py-2 rounded ${mode === "summary" ? "bg-blue-700 text-white" : "bg-blue-600 text-white"}`}
         >
-          Звіт
+          Report
         </button>
       </div>
       <div className="text-left whitespace-pre-line border-t pt-4 mt-4">
-        {loading ? "Завантаження..." : response}
+        {loading ? "Download..." : response}
       </div>
       <div className="text-xs text-gray-500 mt-2">
-        Натисніть <b>Ctrl+Enter</b> (або <b>Cmd+Enter</b> на Mac), щоб відправити запит
+        Click <b>Ctrl+Enter</b> (or <b>Cmd+Enter</b> on Mac) to send a request
       </div>
     </div>
   );
